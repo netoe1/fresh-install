@@ -342,6 +342,7 @@ Public License instead of this License.
 """
 
 import platform
+import os
 
 # Global variables
 currentSystem = ""
@@ -351,8 +352,7 @@ currentPkgManager = ""
 # Dictionaries
 apt_OSPkgSup = ['ubuntu','debian','mint','elementary']
 dnf_OSPkgSup = ['fedora','rocky']
-
-
+programsToInstall = ['nodejs','gcc','g++','git','make','curl','code']
 def __getSystemData():   
     global currentSystem, distribution
     currentSystem = (platform.uname().system).lower()
@@ -376,10 +376,13 @@ def getPackageManager():
             return currentPkgManager
     
 def main():
+    if(os.geteuid() != 0):
+      print('fresh-install-err:You should run with sudo privilegies.')
+  
     try:
         getPackageManager()
     except(KeyboardInterrupt):
-        print("Exiting...")
+        print("Fresh-install: exiting...")
 
 # Executing main function.
 main()
