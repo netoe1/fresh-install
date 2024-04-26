@@ -1,143 +1,116 @@
-"""
-
-class PackageManagerAPI:
-    def __init__(self):
-        self.package_manager = self.detect_package_manager()
-
-    def detect_package_manager(self):
-        package_managers = {
-            "apt": "/usr/bin/apt-get",
-            "dnf": "/usr/bin/dnf",
-            "yum": "/usr/bin/yum",
-            "pacman": "/usr/bin/pacman",
-            "zypper": "/usr/bin/zypper",
-            "apk": "/sbin/apk"
-        }
-
-        for manager, path in package_managers.items():
-            if os.path.exists(path):
-                return manager
-        return None
-
-    def install_package(self, package_name):
-        if self.package_manager == "apt":
-            # Implement apt package installation
-            pass
-        elif self.package_manager == "dnf":
-            # Implement dnf package installation
-            pass
-        elif self.package_manager == "yum":
-            # Implement yum package installation
-            pass
-        elif self.package_manager == "pacman":
-            # Implement pacman package installation
-            pass
-        elif self.package_manager == "zypper":
-            # Implement zypper package installation
-            pass
-        elif self.package_manager == "apk":
-            # Implement apk package installation
-            pass
-        else:
-            print("Unsupported package manager.")
-
-    # Similarly, you can define functions for other package manager operations like remove, update, etc.
-
-# Example usage
-package_manager_api = PackageManagerAPI()
-package_manager_api.install_package("example-package")
-
-I have to do this....
-"""
-
-
 import apt_pkg
 import dnf
 import os
+  
+class PackageManagerAPI:
 
-def __install_package_apt(package_name):
-    cache = apt_pkg.Cache()
-    if cache.get_pkg(package_name) is None:
-        print(f"Package \'{package_name}\'wasn't found. ")
-        return
+    __osPkgMgr = ""
+
+    def __init__(self):
+        self.__osPkgMgr = self.__detect_package_manager()
+
+    def __detect_package_manager():
+        try:
+            package_managers = {
+                "apt": "/usr/bin/apt-get",
+                "dnf": "/usr/bin/dnf",
+                "yum": "/usr/bin/yum",
+                "pacman": "/usr/bin/pacman",
+                "zypper": "/usr/bin/zypper",
+                "apk": "/sbin/apk"
+            }
+
+            for manager, path in package_managers.items():
+                if os.path.exists(path):
+                    return manager
+
+        except Exception as e:
+            print("PackageManagerAPI:An error occurred during package manager detection:", e)
+
+        return None
     
-    pkg = cache[package_name]
-    if pkg.current_state != apt_pkg.CURSTATE_NOT_INSTALLED:
-        print(f"Package {package_name} is already installed.")
-        return
+    def getPkgMgr(self):
+        return self.__osPkgMgr
     
-    apt_pkg.init_system()
-    cache.update()
-    cache.open()
+    def setPkgMgr(self,label): # Careful with this code, uses valid labels, else the class can't work properly.
+        if(label != None):
+            self.__osPkgMgr = str(label).strip().lower()
     
-    try:
-        pkg.mark_install()
-        cache.commit()
-        print(f"Package {package_name} installed with success.")
-    except SystemError as e:
-        print(f"Error to install package {package_name}: {e}")
-
-def __install_package_dnf(package_name):
-    base = dnf.Base()
-    base.fill_sack()
-    try:
-        base.install(package_name)
-        base.resolve()
-        base.do_transaction()
-        print(f"The package {package_name} was installed successfully!")
-    except dnf.exceptions.Error as e:
-        print(f"Error to install package {package_name}: {e}")
-
-def __removePackage_dnf(package_name):
-    try:
-        base = dnf.Base()
-        base.read_all_repos()
-        base.remove(package_name)
-        base.resolve()
-        base.download_packages(base.transaction.install_set)
-        base.do_transaction()
-
-    except dnf.exceptions.Error as e:
-        print("An error occurred when finalizing the transaction.", e)
-
-    finally:
-        if base:
-            base.close()
-
-def __removePackage_apt(package_name):
-    try:
-        apt_pkg.init()
-        cache = apt_pkg.Cache()
-        if cache[package_name].is_installed:
-            cache[package_name].mark_delete()
-            cache.commit()
-            print(f'The package "{package_name}" was removed successfully.')
+    def installPkg(self,pkg_name):
+        if(self.__osPkgMgr == "dnf"):
+            base = dnf.Base()
+            base.fill_sack()
+            try:
+                base.install(pkg_name)
+                base.resolve()
+                base.do_transaction()
+                print(f"The package {pkg_name} was installed successfully!")
+            except dnf.exceptions.Error as e:
+                print(f"Error to install package {pkg_name}: {e}")
+        
+        elif(self.__osPkgMgr == "apt"):
+            cache = apt_pkg.Cache()
+            if cache.get_pkg(pkg_name) is None:
+                print(f"Package \'{pkg_name}\'wasn't found. ")
+                return
+            
+            pkg = cache[pkg_name]
+            if pkg.current_state != apt_pkg.CURSTATE_NOT_INSTALLED:
+                print(f"Package {pkg_name} is already installed.")
+                return
+            
+            apt_pkg.init_system()
+            cache.update()
+            cache.open()
+            
+            try:
+                pkg.mark_install()
+                cache.commit()
+                print(f"Package {pkg_name} installed with success.")
+            except SystemError as e:
+                print(f"Error to install package {pkg_name}: {e}")
         else:
-            print(f'The package "{package_name}" is not installed.')
-    except Exception as e:
-        print("An error occurred while removing the package", e)
-    finally:
-        apt_pkg.cleanup()
+            try:
+                raise Exception("Your package manager isn't supported yet.")
+            except Exception as error:
+                print("PackageManagerAPI:" + str(error))
+        
+        """
+        elif(self.__osPkgMgr == "yum"):
+        elif(self.__osPkgMgr == "pacman"):
+        elif(self.__osPkgMgr == "zypper"):
+        """
 
-def __detect_package_manager():
-    try:
-        package_managers = {
-            "apt": "/usr/bin/apt-get",
-            "dnf": "/usr/bin/dnf",
-            "yum": "/usr/bin/yum",
-            "pacman": "/usr/bin/pacman",
-            "zypper": "/usr/bin/zypper",
-            "apk": "/sbin/apk"
-        }
+    def removePkg(self,pkg_name):
+        if(self.__osPkgMgr == 'dnf'):
+            try:
+                base = dnf.Base()
+                base.read_all_repos()
+                base.remove(pkg_name)
+                base.resolve()
+                base.download_packages(base.transaction.install_set)
+                base.do_transaction()
 
-        for manager, path in package_managers.items():
-            if os.path.exists(path):
-                return manager
+            except dnf.exceptions.Error as e:
+                print("An error occurred when finalizing the transaction.", e)
 
-    except Exception as e:
-        print("An error occurred during package manager detection:", e)
+            finally:
+                if base:
+                    base.close()
 
-    return None
+        elif(self.__osPkgMgr == 'apt'):  
+            try:
+                apt_pkg.init()
+                cache = apt_pkg.Cache()
+                if cache[pkg_name].is_installed:
+                    cache[pkg_name].mark_delete()
+                    cache.commit()
+                    print(f'The package "{pkg_name}" was removed successfully.')
+                else:
+                    print(f'The package "{pkg_name}" is not installed.')
+            except Exception as e:
+                print("An error occurred while removing the package", e)
+            finally:
+                apt_pkg.cleanup()
 
-
-
+            
