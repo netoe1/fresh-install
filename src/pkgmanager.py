@@ -113,4 +113,9 @@ class PackageManagerAPI:
             finally:
                 apt_pkg.cleanup()
 
-            
+    def searchPkg(self,pkg_name):
+        if(self.__osPkgMgr == 'dnf'):
+            print('implement code here: dnf')
+        elif(self.__osPkgMgr == 'apt'):
+            print('implement code here apt')
+
